@@ -4,16 +4,22 @@ import googleapiclient.errors
 from yt_dlp import YoutubeDL
 
 # 1. Download YouTube Short Video
+import yt_dlp
+
 def download_short(video_url):
     ydl_opts = {
-    'format': 'best',
-    'cookiefile': 'cookies.txt',
-    'outtmpl': 'downloaded_video.mp4',
-}
-    with YoutubeDL(ydl_opts) as ydl:
+        'format': 'bestvideo+bestaudio/best',
+        'outtmpl': 'downloaded_video.mp4',
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'web']
+            }
+        }
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
     return 'downloaded_video.mp4'
-
 # 2. Upload to YouTube Channel
 def upload_to_youtube(video_file, title):
     api_service_name = "youtube"
