@@ -6,14 +6,10 @@ from yt_dlp import YoutubeDL
 # 1. Download YouTube Short Video
 def download_short(video_url):
     ydl_opts = {
-        'format': 'best',
-        'outtmpl': 'downloaded_video.mp4',
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'ios']
-            }
-        }
-    }
+    'format': 'best',
+    'cookiefile': 'cookies.txt',
+    'outtmpl': 'downloaded_video.mp4',
+}
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
     return 'downloaded_video.mp4'
