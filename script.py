@@ -1,15 +1,46 @@
 import os
-import googleapiclient.discovery
-import googleapiclient.errors
-from yt_dlp import YoutubeDL
-
-# 1. Download YouTube Short Video
+import random
 import yt_dlp
+from googleapiclient.discovery import build
 
-def download_short(video_url):
+# GitHub Secrets se API Key lein
+API_KEY = os.environ.get('YOUTUBE_API_KEY')
+
+def get_random_short(api_key):
+    """YouTube API se Trending Shorts/Videos dhoondta hai"""
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    
+    # Keyword list - aap isko apne content ke hisab se change kar sakte hain
+    search_queries = ['#shorts', 'viral shorts', 'trending shorts', 'funny shorts']
+    query = random.choice(search_queries)
+    
+    request = youtube.search().list(
+        q=query,
+        part='snippet',
+        type='video',
+        videoDuration='short',  # Only YouTube Shorts
+        maxResults=10
+    )
+    response = request.execute()
+    
+    items = response.get('items', [])
+    if not items:
+        raise Exception("No videos found from API search.")
+    
+    selected_video = random.choice(items)
+    video_id = selected_video['id']['videoId']
+    video_url = f"https://www.youtube.com/watch?v={video_id}"
+    
+    print(f"Selected Video Title: {selected_video['snippet']['title']}")
+    print(f"Selected Video URL: {video_url}")
+    return video_url
+
+def download_video(video_url):
+    """yt-dlp ka use karke video download karta hai (Bot Prevention Bypass ke saath)"""
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best',
         'outtmpl': 'downloaded_video.mp4',
+        'overwrites': True,
         'extractor_args': {
             'youtube': {
                 'player_client': ['android', 'ios', 'web']
@@ -17,46 +48,15 @@ def download_short(video_url):
         }
     }
     
+    print("Downloading video with yt-dlp...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
-    return 'downloaded_video.mp4'
-# 2. Upload to YouTube Channel
-def upload_to_youtube(video_file, title):
-    api_service_name = "youtube"
-    api_version = "v3"
     
-    # YouTube API Client Setup
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=os.environ.get("YOUTUBE_API_KEY")
-    )
+    print("Video successfully downloaded as downloaded_video.mp4")
 
-    request_body = {
-        'snippet': {
-            'title': title,
-            'description': 'Auto-uploaded YouTube Short #shorts',
-            'tags': ['shorts', 'mrbeast'],
-            'categoryId': '24'
-        },
-        'status': {
-            'privacyStatus': 'public',
-            'selfDeclaredMadeForKids': False,
-        }
-    }
-
-    # Execute Upload
-    media_file = googleapiclient.http.MediaFileUpload(video_file, chunksize=-1, resumable=True)
-    request = youtube.videos().insert(
-        part="snippet,status",
-        body=request_body,
-        media_body=media_file
-    )
-    response = request.execute()
-    print("Uploaded successfully! Video ID:", response.get("id"))
-
-if __name__ == "__main__":
-    # Top video link from Sheet
-    video_url = "https://www.youtube.com/shorts/YlvcFJOE-OE"
-    title = "Giving iPhones Instead Of Candy on Halloween #shorts"
-    
-    video_file = download_short(video_url)
-    upload_to_youtube(video_file, title)
+if __name__ == '__main__':
+    if not API_KEY:
+        raise ValueError("YOUTUBE_API_KEY environment variable is not set!")
+        
+    url = get_random_short(API_KEY)
+    download_video(url)
