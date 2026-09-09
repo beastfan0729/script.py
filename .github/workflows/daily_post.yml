@@ -2,8 +2,8 @@ name: Daily YouTube Auto Post
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Har raat midnight par chalega
-  workflow_dispatch: # Manual trigger ke liye
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   build-and-upload:
@@ -17,16 +17,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Deno runtime add karein taaki yt-dlp YouTube JS challenge pass kar sake
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install yt-dlp google-api-python-client google-auth-oauthlib google-auth-httplib2
+
+      - name: Save Cookies
+        run: |
+          echo "$YT_COOKIES" > cookies.txt
+        env:
+          YT_COOKIES: ${{ secrets.YT_COOKIES }}
 
       - name: Run Auto-Upload Script
         env:
