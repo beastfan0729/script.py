@@ -5,16 +5,13 @@ import sys
 import yt_dlp
 from googleapiclient.discovery import build
 
-# GitHub Secrets se API Key lein
 API_KEY = os.environ.get('YOUTUBE_API_KEY')
 COOKIE_FILE = 'cookies.txt'
 
 
 def get_random_short(api_key):
-    """YouTube API se Trending Shorts/Videos dhoondta hai"""
     youtube = build('youtube', 'v3', developerKey=api_key)
 
-    # Keyword list - aap isko apne content ke hisab se change kar sakte hain
     search_queries = ['#shorts', 'viral shorts', 'trending shorts', 'funny shorts']
     query = random.choice(search_queries)
 
@@ -35,15 +32,10 @@ def get_random_short(api_key):
 
     selected_video = random.choice(items)
     video_id = selected_video['id']['videoId']
-    video_url = f"https://www.youtube.com/watch?v={video_id}"
-
-    print(f"Selected Video Title: {selected_video['snippet']['title']}")
-    print(f"Selected Video URL: {video_url}")
-    return video_url
+    return f"https://www.youtube.com/watch?v={video_id}"
 
 
 def download_video(video_url):
-    """yt-dlp ka use karke video download karta hai."""
     ydl_opts = {
         'format': 'bestvideo+bestaudio/best[ext=mp4]/best',
         'outtmpl': 'downloaded_video.mp4',
@@ -61,12 +53,9 @@ def download_video(video_url):
         }
     }
 
-    # Pass cookies.txt if the file exists (created by GitHub Actions or a local session)
     if os.path.exists(COOKIE_FILE):
         ydl_opts['cookiefile'] = COOKIE_FILE
         print(f"Using {COOKIE_FILE} for authentication...")
-    else:
-        print("No cookies.txt found; YouTube may block downloads without cookies.")
 
     print("Downloading video with yt-dlp...")
     try:
